@@ -1,11 +1,16 @@
 package com.dglynch.twelvedollar;
 
-public class App {
-    public String getGreeting() {
-        return "Hello World!";
-    }
+import io.helidon.webserver.WebServer;
+import io.helidon.webserver.http.HttpRouting;
 
+public class App {
     void main() {
-        System.out.println(new App().getGreeting());
+        WebServer.builder()
+                .port(80)
+                .addRouting(HttpRouting.builder().get(
+                        "/greet", (_, response) ->
+                                response.send("Hello World!")))
+                .build()
+                .start();
     }
 }
