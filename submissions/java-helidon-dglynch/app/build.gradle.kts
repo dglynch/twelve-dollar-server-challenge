@@ -11,7 +11,8 @@ dependencies {
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    implementation(libs.guava)
+    implementation(platform(libs.helidon.bom))
+    implementation(libs.helidon.webserver)
 }
 
 java {

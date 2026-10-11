@@ -1,7 +1,8 @@
 [versions]
-guava = "33.5.0-jre"
+helidon = "27.0.0"
 junit-jupiter = "6.0.1"
 
 [libraries]
-guava = { module = "com.google.guava:guava", version.ref = "guava" }
+helidon-bom = { group = "io.helidon", name = "helidon-bom", version.ref = "helidon" }
+helidon-webserver = { group = "io.helidon.webserver", name = "helidon-webserver" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
