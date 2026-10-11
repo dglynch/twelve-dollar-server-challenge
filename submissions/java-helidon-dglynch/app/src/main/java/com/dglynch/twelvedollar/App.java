@@ -5,7 +5,7 @@ public class App {
         return "Hello World!";
     }
 
-    public static void main(String[] args) {
+    void main() {
         System.out.println(new App().getGreeting());
     }
 }
