@@ -27,6 +27,7 @@ public class WebService {
                         .get("/feed", this::feed)
                         .get("/posts/{id}", this::getPosts)
                         .any("/*", this::notFound)
+                        .error(Throwable.class, this::error)
                 )
                 .build()
                 .start();
@@ -66,5 +67,9 @@ public class WebService {
 
     private void notFound(ServerRequest request, ServerResponse response) {
         response.status(404).send(new Error("not found"));
+    }
+
+    private void error(ServerRequest request, ServerResponse response, Throwable throwable) {
+        response.status(500).send(new Error("internal server error"));
     }
 }
