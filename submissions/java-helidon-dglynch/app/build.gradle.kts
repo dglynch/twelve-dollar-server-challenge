@@ -13,6 +13,14 @@ dependencies {
 
     implementation(platform(libs.helidon.bom))
     implementation(libs.helidon.webserver)
+    implementation(libs.helidon.http.media.json)
+    implementation(libs.helidon.json.binding)
+    implementation(libs.helidon.http.media.json.binding)
+    implementation(libs.sqlite.jdbc)
+
+    annotationProcessor(libs.helidon.codegen.apt)
+    annotationProcessor(libs.helidon.service.codegen)
+    annotationProcessor(libs.helidon.json.codegen)
 }
 
 java {
