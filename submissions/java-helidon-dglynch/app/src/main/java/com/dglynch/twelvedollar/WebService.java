@@ -22,7 +22,10 @@ public class WebService {
                 .host(host)
                 .port(port)
                 .mediaContext(media -> media.addMediaSupport(JsonBindingSupport.create()))
-                .addRouting(HttpRouting.builder().get("/health", this::health))
+                .addRouting(HttpRouting.builder()
+                        .get("/health", this::health)
+                        .get("/feed", this::feed)
+                )
                 .build()
                 .start();
         businessLogic.start();
@@ -35,5 +38,9 @@ public class WebService {
             case HealthStatus.Degraded _ -> response.status(503);
         }
         response.send(health);
+    }
+
+    private void feed(ServerRequest request, ServerResponse response) {
+        response.send(businessLogic.feed());
     }
 }
