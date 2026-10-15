@@ -26,6 +26,7 @@ public class WebService {
                         .get("/health", this::health)
                         .get("/feed", this::feed)
                         .get("/posts/{id}", this::getPosts)
+                        .post("/posts", this::postPosts)
                         .any("/*", this::notFound)
                         .error(Throwable.class, this::error)
                 )
@@ -62,6 +63,18 @@ public class WebService {
             }
         } catch (NumberFormatException _) {
             response.status(400).send(new Error("invalid post id"));
+        }
+    }
+
+    private void postPosts(ServerRequest request, ServerResponse response) {
+        var body = request.content().as(Post.class).body();
+        if (body != null && !body.isBlank()) {
+            SinglePost post = businessLogic.createPost(0, "", body.strip());
+            if (post.post() != null) {
+                response.status(201).send(post);
+            } else {
+                response.status(500).send(new Error("failed to create post"));
+            }
         }
     }
 

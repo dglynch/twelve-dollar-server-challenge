@@ -37,4 +37,8 @@ public class BusinessLogic {
     public SinglePost getPost(long id) {
         return new SinglePost(databaseModel.getPost(id));
     }
+
+    public SinglePost createPost(long userId, String author, String body) {
+        return new SinglePost(databaseModel.createPost(userId, author, body));
+    }
 }

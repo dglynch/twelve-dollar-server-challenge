@@ -8,6 +8,7 @@ public class DatabaseModel {
     private final PreparedStatement healthStatement;
     private final PreparedStatement feedStatement;
     private final PreparedStatement getPostStatement;
+    private final PreparedStatement createPostStatement;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(Thread.ofPlatform().name("database").factory());
 
@@ -24,6 +25,9 @@ public class DatabaseModel {
                         "(SELECT count(*) FROM likes l WHERE l.post_id = p.id) AS like_count " +
                         "FROM posts p JOIN users u ON u.id = p.user_id " +
                         "WHERE p.id = ?");
+        createPostStatement = connection.prepareStatement(
+                "INSERT INTO posts (user_id, body) VALUES (?, ?) RETURNING id, created_at",
+                Statement.RETURN_GENERATED_KEYS);
     }
 
     public boolean isHealthy() {
@@ -73,6 +77,30 @@ public class DatabaseModel {
                                 resultSet.getString("created_at"),
                                 resultSet.getString("username"),
                                 resultSet.getLong("like_count"));
+                    } else {
+                        return null;
+                    }
+                }
+            }).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public Post createPost(long userId, String author, String body) {
+        try {
+            return executor.submit(() -> {
+                createPostStatement.setLong(1, userId);
+                createPostStatement.setString(2, body);
+                try (var resultSet = createPostStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return new Post(
+                                resultSet.getLong("id"),
+                                body,
+                                resultSet.getString("created_at"),
+                                author,
+                                0);
                     } else {
                         return null;
                     }
