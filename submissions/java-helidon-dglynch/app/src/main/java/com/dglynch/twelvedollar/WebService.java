@@ -26,6 +26,7 @@ public class WebService {
                         .get("/health", this::health)
                         .get("/feed", this::feed)
                         .get("/posts/{id}", this::getPosts)
+                        .any("/*", this::notFound)
                 )
                 .build()
                 .start();
@@ -61,5 +62,9 @@ public class WebService {
         } catch (NumberFormatException _) {
             response.status(400).send(new Error("invalid post id"));
         }
+    }
+
+    private void notFound(ServerRequest request, ServerResponse response) {
+        response.status(404).send(new Error("not found"));
     }
 }
