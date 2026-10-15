@@ -33,4 +33,8 @@ public class BusinessLogic {
     public Feed feed() {
         return new Feed(databaseModel.getFeed());
     }
+
+    public SinglePost getPost(long id) {
+        return new SinglePost(databaseModel.getPost(id));
+    }
 }

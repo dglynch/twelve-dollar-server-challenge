@@ -7,6 +7,7 @@ public class DatabaseModel {
     private final Connection connection;
     private final PreparedStatement healthStatement;
     private final PreparedStatement feedStatement;
+    private final PreparedStatement getPostStatement;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(Thread.ofPlatform().name("database").factory());
 
@@ -18,6 +19,11 @@ public class DatabaseModel {
                         "(SELECT count(*) FROM likes l WHERE l.post_id = p.id) AS like_count " +
                         "FROM posts p JOIN users u ON u.id = p.user_id " +
                         "ORDER BY p.created_at DESC, p.id DESC LIMIT 20");
+        getPostStatement = connection.prepareStatement(
+                "SELECT p.id, p.body, p.created_at, u.username, " +
+                        "(SELECT count(*) FROM likes l WHERE l.post_id = p.id) AS like_count " +
+                        "FROM posts p JOIN users u ON u.id = p.user_id " +
+                        "WHERE p.id = ?");
     }
 
     public boolean isHealthy() {
@@ -52,6 +58,29 @@ public class DatabaseModel {
         } catch (Exception e) {
             e.printStackTrace();
             return List.of();
+        }
+    }
+
+    public Post getPost(long id) {
+        try {
+            return executor.submit(() -> {
+                getPostStatement.setLong(1, id);
+                try (var resultSet = getPostStatement.executeQuery()) {
+                    if (resultSet.next()) {
+                        return new Post(
+                                resultSet.getLong("id"),
+                                resultSet.getString("body"),
+                                resultSet.getString("created_at"),
+                                resultSet.getString("username"),
+                                resultSet.getLong("like_count"));
+                    } else {
+                        return null;
+                    }
+                }
+            }).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }

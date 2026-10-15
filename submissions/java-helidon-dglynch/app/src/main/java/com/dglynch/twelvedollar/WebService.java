@@ -25,6 +25,7 @@ public class WebService {
                 .addRouting(HttpRouting.builder()
                         .get("/health", this::health)
                         .get("/feed", this::feed)
+                        .get("/posts/{id}", this::getPosts)
                 )
                 .build()
                 .start();
@@ -42,5 +43,23 @@ public class WebService {
 
     private void feed(ServerRequest request, ServerResponse response) {
         response.send(businessLogic.feed());
+    }
+
+    private void getPosts(ServerRequest request, ServerResponse response) {
+        try {
+            long id = Long.parseLong(request.path().pathParameters().get("id"));
+            if (id > 0) {
+                SinglePost post = businessLogic.getPost(id);
+                if (post.post() != null) {
+                    response.send(post);
+                } else {
+                    response.status(404).send(new Error("post not found"));
+                }
+            } else {
+                response.status(400).send(new Error("invalid post id"));
+            }
+        } catch (NumberFormatException _) {
+            response.status(400).send(new Error("invalid post id"));
+        }
     }
 }
