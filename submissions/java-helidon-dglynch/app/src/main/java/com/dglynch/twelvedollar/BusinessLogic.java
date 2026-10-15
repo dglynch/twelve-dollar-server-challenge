@@ -29,4 +29,8 @@ public class BusinessLogic {
             return new HealthStatus.Degraded("degraded", "unreachable", "not started");
         }
     }
+
+    public Feed feed() {
+        return new Feed(databaseModel.getFeed());
+    }
 }
