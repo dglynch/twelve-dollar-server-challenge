@@ -1,5 +1,7 @@
 package com.dglynch.twelvedollar;
 
+import module java.base;
+import io.helidon.http.HeaderNames;
 import io.helidon.http.media.json.binding.JsonBindingSupport;
 import io.helidon.webserver.WebServer;
 import io.helidon.webserver.http.HttpRouting;
@@ -8,11 +10,13 @@ import io.helidon.webserver.http.ServerResponse;
 
 public class WebService {
     private final BusinessLogic businessLogic;
+    private final TokenVerifier tokenVerifier;
     private final String host;
     private final int port;
 
-    public WebService(BusinessLogic businessLogic, String host, int port) {
+    public WebService(BusinessLogic businessLogic, TokenVerifier tokenVerifier, String host, int port) {
         this.businessLogic = businessLogic;
+        this.tokenVerifier = tokenVerifier;
         this.host = host;
         this.port = port;
     }
@@ -67,9 +71,30 @@ public class WebService {
     }
 
     private void postPosts(ServerRequest request, ServerResponse response) {
+        var authorization = request.headers().value(HeaderNames.AUTHORIZATION);
+        if (authorization.isEmpty() || !authorization.get().startsWith("Bearer ")) {
+            response.status(401).send(new Error("missing bearer token"));
+            return;
+        }
+
+        TokenVerifier.VerifiedToken verifiedToken;
+        try {
+            verifiedToken = tokenVerifier.verifyToken(authorization.get().substring("Bearer ".length()));
+        } catch (TokenVerifier.InvalidJwtException _) {
+            response.status(401).send(new Error("invalid or expired token"));
+            return;
+        }
+
+        var authenticatedUser = tokenVerifier.authenticatedUser(verifiedToken);
+        if (authenticatedUser.isEmpty()) {
+            response.status(401).send(new Error("invalid token payload"));
+            return;
+        }
+
         var body = request.content().as(Post.class).body();
         if (body != null && !body.isBlank()) {
-            SinglePost post = businessLogic.createPost(0, "", body.strip());
+            SinglePost post = businessLogic.createPost(authenticatedUser.get().userId(),
+                    authenticatedUser.get().username(), body.strip());
             if (post.post() != null) {
                 response.status(201).send(post);
             } else {
