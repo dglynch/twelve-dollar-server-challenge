@@ -3,6 +3,9 @@ package com.dglynch.twelvedollar;
 import module java.base;
 import io.helidon.http.HeaderNames;
 import io.helidon.http.media.json.binding.JsonBindingSupport;
+import io.helidon.json.JsonException;
+import io.helidon.json.JsonParser;
+import io.helidon.json.JsonValueType;
 import io.helidon.webserver.WebServer;
 import io.helidon.webserver.http.HttpRouting;
 import io.helidon.webserver.http.ServerRequest;
@@ -91,15 +94,27 @@ public class WebService {
             return;
         }
 
-        var body = request.content().as(Post.class).body();
-        if (body != null && !body.isBlank()) {
-            SinglePost post = businessLogic.createPost(authenticatedUser.get().userId(),
-                    authenticatedUser.get().username(), body.strip());
-            if (post.post() != null) {
-                response.status(201).send(post);
+        try {
+            var jsonObject = JsonParser.create(request.content().inputStream()).readJsonObject();
+            var bodyValue = jsonObject.value("body").orElse(null);
+            if (bodyValue != null && bodyValue.type() == JsonValueType.STRING && !bodyValue.asString().value().isBlank()) {
+                String trimmedBody = bodyValue.asString().value().strip();
+                if (trimmedBody.length() <= 500) {
+                    SinglePost post = businessLogic.createPost(authenticatedUser.get().userId(),
+                            authenticatedUser.get().username(), trimmedBody);
+                    if (post.post() != null) {
+                        response.status(201).send(post);
+                    } else {
+                        response.status(500).send(new Error("internal server error"));
+                    }
+                } else {
+                    response.status(400).send(new Error("body must be at most 500 characters"));
+                }
             } else {
-                response.status(500).send(new Error("failed to create post"));
+                response.status(400).send(new Error("body is required"));
             }
+        } catch (JsonException _) {
+            response.status(400).send(new Error("malformed JSON body"));
         }
     }
 
