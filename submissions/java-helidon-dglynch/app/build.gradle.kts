@@ -31,6 +31,11 @@ java {
 
 application {
     mainClass = "com.dglynch.twelvedollar.App"
+    applicationDefaultJvmArgs = listOf(
+        "-Xmx1024m",
+        "-Xms1024m",
+        "-XX:+AlwaysPreTouch",
+    )
 }
 
 tasks.named<Test>("test") {
