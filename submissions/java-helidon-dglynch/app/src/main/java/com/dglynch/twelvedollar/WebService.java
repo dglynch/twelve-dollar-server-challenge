@@ -34,6 +34,7 @@ public class WebService {
                         .get("/feed", this::feed)
                         .get("/posts/{id}", this::getPosts)
                         .post("/posts", this::postPosts)
+                        .post("/posts/{id}/like", this::postPostsLike)
                         .any("/*", this::notFound)
                         .error(Throwable.class, this::error)
                 )
@@ -115,6 +116,45 @@ public class WebService {
             }
         } catch (JsonException _) {
             response.status(400).send(new Error("malformed JSON body"));
+        }
+    }
+
+    private void postPostsLike(ServerRequest request, ServerResponse response) {
+        var authorization = request.headers().value(HeaderNames.AUTHORIZATION);
+        if (authorization.isEmpty() || !authorization.get().startsWith("Bearer ")) {
+            response.status(401).send(new Error("missing bearer token"));
+            return;
+        }
+
+        TokenVerifier.VerifiedToken verifiedToken;
+        try {
+            verifiedToken = tokenVerifier.verifyToken(authorization.get().substring("Bearer ".length()));
+        } catch (TokenVerifier.InvalidJwtException _) {
+            response.status(401).send(new Error("invalid or expired token"));
+            return;
+        }
+
+        var authenticatedUser = tokenVerifier.authenticatedUser(verifiedToken);
+        if (authenticatedUser.isEmpty()) {
+            response.status(401).send(new Error("invalid token payload"));
+            return;
+        }
+
+        try {
+            long id = Long.parseLong(request.path().pathParameters().get("id"));
+            if (id > 0) {
+                LikeResult result = businessLogic.likePost(id, authenticatedUser.get().userId());
+                switch (result) {
+                    case LikeResult.NewlyLiked _ -> response.status(201).send(result);
+                    case LikeResult.AlreadyLiked _ -> response.status(200).send(result);
+                    case Error(String message) when "post not found".equals(message) -> response.status(404).send(result);
+                    case null, default -> response.status(500).send(new Error("internal server error"));
+                }
+            } else {
+                response.status(400).send(new Error("invalid post id"));
+            }
+        } catch (NumberFormatException _) {
+            response.status(400).send(new Error("invalid post id"));
         }
     }
 

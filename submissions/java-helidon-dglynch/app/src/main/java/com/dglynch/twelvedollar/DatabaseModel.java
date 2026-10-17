@@ -9,6 +9,7 @@ public class DatabaseModel {
     private final PreparedStatement feedStatement;
     private final PreparedStatement getPostStatement;
     private final PreparedStatement createPostStatement;
+    private final PreparedStatement likePostStatement;
 
     private final ExecutorService executor = Executors.newSingleThreadExecutor(Thread.ofPlatform().name("database").factory());
 
@@ -28,6 +29,8 @@ public class DatabaseModel {
         createPostStatement = connection.prepareStatement(
                 "INSERT INTO posts (user_id, body) VALUES (?, ?) RETURNING id, created_at",
                 Statement.RETURN_GENERATED_KEYS);
+        likePostStatement = connection.prepareStatement(
+                "INSERT INTO likes (user_id, post_id) VALUES (?, ?) ON CONFLICT (user_id, post_id) DO NOTHING");
     }
 
     public boolean isHealthy() {
@@ -103,6 +106,32 @@ public class DatabaseModel {
                                 0);
                     } else {
                         return null;
+                    }
+                }
+            }).get();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+    public LikeResult likePost(long postId, long userId) {
+        try {
+            return executor.submit(() -> {
+                likePostStatement.setLong(1, userId);
+                likePostStatement.setLong(2, postId);
+                try {
+                    var rowCount = likePostStatement.executeUpdate();
+                    if (rowCount > 0) {
+                        return new LikeResult.NewlyLiked(true, false, postId);
+                    } else {
+                        return new LikeResult.AlreadyLiked(true, true, postId);
+                    }
+                } catch (SQLException e) {
+                    if (e.getErrorCode() == 19) {
+                        return new Error("post not found");
+                    } else {
+                        throw e;
                     }
                 }
             }).get();
