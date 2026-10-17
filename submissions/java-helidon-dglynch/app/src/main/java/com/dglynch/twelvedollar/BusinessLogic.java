@@ -41,4 +41,8 @@ public class BusinessLogic {
     public SinglePost createPost(long userId, String author, String body) {
         return new SinglePost(databaseModel.createPost(userId, author, body));
     }
+
+    public LikeResult likePost(long postId, long userId) {
+        return databaseModel.likePost(postId, userId);
+    }
 }

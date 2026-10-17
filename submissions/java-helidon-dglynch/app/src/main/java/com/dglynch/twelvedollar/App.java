@@ -9,7 +9,7 @@ public class App {
         var sqlitePath = Optional.ofNullable(System.getenv("SQLITE_PATH")).orElse("seed/feed.db");
         var jwtSecret = Optional.ofNullable(System.getenv("JWT_SECRET")).orElse("twelve-dollar-challenge");
 
-        var databaseModel = new DatabaseModel("jdbc:sqlite:" + sqlitePath);
+        var databaseModel = new DatabaseModel("jdbc:sqlite:" + sqlitePath + "?foreign_keys=on");
         var businessLogic = new BusinessLogic(databaseModel);
         var tokenVerifier = new TokenVerifier(jwtSecret);
         new WebService(businessLogic, tokenVerifier, host, port).start();
