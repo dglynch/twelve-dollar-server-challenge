@@ -2,9 +2,12 @@ package com.dglynch.twelvedollar;
 
 import module java.base;
 import module java.sql;
+import org.sqlite.SQLiteConfig;
+import org.sqlite.SQLiteConfig.JournalMode;
+import org.sqlite.SQLiteConfig.SynchronousMode;
+import org.sqlite.SQLiteConfig.TempStore;
 
 public class DatabaseModel {
-    private final Connection connection;
     private final PreparedStatement healthStatement;
     private final PreparedStatement feedStatement;
     private final PreparedStatement getPostStatement;
@@ -14,7 +17,15 @@ public class DatabaseModel {
     private final ExecutorService executor = Executors.newSingleThreadExecutor(Thread.ofPlatform().name("database").factory());
 
     public DatabaseModel(String url) throws SQLException {
-        connection = DriverManager.getConnection(url);
+        var config = new SQLiteConfig();
+        config.setJournalMode(JournalMode.WAL);
+        config.setSynchronous(SynchronousMode.NORMAL);
+        config.setCacheSize(-65_536);
+        config.setTempStore(TempStore.MEMORY);
+        config.setPragma(SQLiteConfig.Pragma.FOREIGN_KEYS, "ON");
+
+        var connection = DriverManager.getConnection(url, config.toProperties());
+
         healthStatement = connection.prepareStatement("SELECT 1");
         feedStatement = connection.prepareStatement(
                 "SELECT p.id, p.body, p.created_at, u.username, " +
