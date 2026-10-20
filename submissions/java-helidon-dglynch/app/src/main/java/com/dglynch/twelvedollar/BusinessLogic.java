@@ -3,6 +3,9 @@ package com.dglynch.twelvedollar;
 import module java.base;
 
 public class BusinessLogic {
+    private static final HealthStatus DATABASE_FAILURE = new HealthStatus.DatabaseFailure();
+    private static final HealthStatus NOT_STARTED = new HealthStatus.NotStarted();
+
     private final DatabaseModel databaseModel;
 
     private boolean started = false;
@@ -20,26 +23,26 @@ public class BusinessLogic {
     public HealthStatus health() {
         if (started) {
             if (databaseModel.isHealthy()) {
-                Duration uptime = Duration.ofNanos(System.nanoTime() - startTime);
-                return new HealthStatus.Ok("ok", "ok", uptime.toSeconds());
+                var uptime = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - startTime);
+                return new HealthStatus.Ok(uptime);
             } else {
-                return new HealthStatus.Degraded("degraded", "unreachable", "database failure");
+                return DATABASE_FAILURE;
             }
         } else {
-            return new HealthStatus.Degraded("degraded", "unreachable", "not started");
+            return NOT_STARTED;
         }
     }
 
-    public Feed feed() {
-        return new Feed(databaseModel.getFeed());
+    public List<Post> feed() {
+        return databaseModel.getFeed();
     }
 
-    public SinglePost getPost(long id) {
-        return new SinglePost(databaseModel.getPost(id));
+    public Post getPost(long id) {
+        return databaseModel.getPost(id);
     }
 
-    public SinglePost createPost(long userId, String author, String body) {
-        return new SinglePost(databaseModel.createPost(userId, author, body));
+    public Post createPost(long userId, String author, String body) {
+        return databaseModel.createPost(userId, author, body);
     }
 
     public LikeResult likePost(long postId, long userId) {

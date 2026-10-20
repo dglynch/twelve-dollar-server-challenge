@@ -8,6 +8,10 @@ import org.sqlite.SQLiteConfig.SynchronousMode;
 import org.sqlite.SQLiteConfig.TempStore;
 
 public class DatabaseModel {
+    private static final LikeResult NEWLY_LIKED = new LikeResult.NewlyLiked();
+    private static final LikeResult ALREADY_LIKED = new LikeResult.AlreadyLiked();
+    private static final LikeResult POST_NOT_FOUND = new LikeResult.PostNotFound();
+
     private final PreparedStatement healthStatement;
     private final PreparedStatement feedStatement;
     private final PreparedStatement getPostStatement;
@@ -134,13 +138,13 @@ public class DatabaseModel {
                 try {
                     var rowCount = likePostStatement.executeUpdate();
                     if (rowCount > 0) {
-                        return new LikeResult.NewlyLiked(true, false, postId);
+                        return NEWLY_LIKED;
                     } else {
-                        return new LikeResult.AlreadyLiked(true, true, postId);
+                        return ALREADY_LIKED;
                     }
                 } catch (SQLException e) {
                     if (e.getErrorCode() == 19) {
-                        return new Error("post not found");
+                        return POST_NOT_FOUND;
                     } else {
                         throw e;
                     }
