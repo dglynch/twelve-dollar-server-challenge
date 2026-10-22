@@ -32,6 +32,8 @@ java {
 application {
     mainClass = "com.dglynch.twelvedollar.App"
     applicationDefaultJvmArgs = listOf(
+        "--show-version",
+        "-XX:+PrintFlagsFinal",
         "-Xmx1024m",
         "-Xms1024m",
         "-XX:+AlwaysPreTouch",
