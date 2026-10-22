@@ -35,6 +35,8 @@ application {
         "-Xmx1024m",
         "-Xms1024m",
         "-XX:+AlwaysPreTouch",
+        "-XX:+CrashOnOutOfMemoryError",
+        "-XX:+HeapDumpOnOutOfMemoryError",
     )
 }
 
