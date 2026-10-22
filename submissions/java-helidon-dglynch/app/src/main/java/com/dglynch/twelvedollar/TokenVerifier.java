@@ -6,10 +6,10 @@ import io.helidon.json.JsonParser;
 import io.helidon.json.JsonValueType;
 
 public class TokenVerifier {
-    private final String jwtSecret;
+    private final SecretKeySpec secretKeySpec;
 
     public TokenVerifier(String jwtSecret) {
-        this.jwtSecret = jwtSecret;
+        this.secretKeySpec = new SecretKeySpec(jwtSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256");
     }
 
     public VerifiedToken verifyToken(String token) {
@@ -31,7 +31,7 @@ public class TokenVerifier {
 
             var signature = Base64.getUrlDecoder().decode(parts[2]);
             var mac = Mac.getInstance("HmacSHA256");
-            mac.init(new SecretKeySpec(jwtSecret.getBytes(StandardCharsets.UTF_8), "HmacSHA256"));
+            mac.init(secretKeySpec);
             var expectedSignature = mac.doFinal((parts[0] + "." + parts[1]).getBytes(StandardCharsets.UTF_8));
             if (!MessageDigest.isEqual(expectedSignature, signature)) {
                 throw new InvalidJwtException();
