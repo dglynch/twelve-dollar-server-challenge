@@ -11,13 +11,14 @@ dependencies {
 
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-    implementation(platform(libs.helidon.bom))
+    implementation(enforcedPlatform(libs.helidon.bom))
     implementation(libs.helidon.webserver)
     implementation(libs.helidon.http.media.json)
     implementation(libs.helidon.json.binding)
     implementation(libs.helidon.http.media.json.binding)
     implementation(libs.sqlite.jdbc)
 
+    annotationProcessor(enforcedPlatform(libs.helidon.bom))
     annotationProcessor(libs.helidon.codegen.apt)
     annotationProcessor(libs.helidon.service.codegen)
     annotationProcessor(libs.helidon.json.codegen)
