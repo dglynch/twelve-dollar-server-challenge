@@ -102,5 +102,7 @@ public class TokenVerifier {
     }
 
     public static final class InvalidJwtException extends RuntimeException {
+        @Serial
+        private static final long serialVersionUID = 1L;
     }
 }
