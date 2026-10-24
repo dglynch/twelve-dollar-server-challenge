@@ -42,6 +42,10 @@ application {
     )
 }
 
+tasks.withType<JavaCompile>().configureEach {
+    options.compilerArgs.add("-Werror")
+    options.compilerArgs.add("-Xlint:all,-processing")
+}
 tasks.named<Test>("test") {
     useJUnitPlatform()
 }
